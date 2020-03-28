@@ -1,95 +1,115 @@
 const compose = (...functions) => data =>
-    functions.reduceRight((value, func) => func(value), data);
+    functions.reduceRight((value, func) => func(value), data)
 
-// Recibira un objeto de esta forma
-//{
-//  tag : 'h1',
-//  attr: {
-//      class : 'title
-//  }
-//}
 const attrsToString = (obj = {}) => {
-    const keys = Object.keys(obj);
-    const attrs = [];
+    const keys = Object.keys(obj)
+    const attrs = []
+
     for (let i = 0; i < keys.length; i++) {
-        let attr = keys[i];
-        attrs.push(`${attr}="${obj[attr]}"`);
+        let attr = keys[i]
+        attrs.push(`${attr}=“${obj[attr]}"`)
     }
 
-    const string = attrs.join('');
-    return string;
-};
-// "tag="h1 class="title"";
+    const string = attrs.join(' ')
 
-const tagAttrs = obj => (content = "") =>
-    `<${obj.tag}${obj.attrs ? ' ' : ''}${attrsToString(obj.attrs)}>${content}</${obj.tag}>`;
-
-//const tag = t => content => `<${t}>${content}</tr>`;
-const tag = t => {
-    if (typeof t === 'string') {
-        tagAttrs(t)
-    }
+    return string
 }
 
-//console.log(tag('h1')('Title')); // <h1>Title</h1>
+const tagAttrs = obj => (content = '') =>
+    `<${obj.tag}${obj.attrs ? ' ' :	 ''}${attrsToString(obj.attrs)}>${content}</${obj.tag}>`
 
-let description = $('#description');
-let carbs = $('#carbs');
-let calories = $('#calories');
-let proteins = $('#proteins');
+const tag = t => {
+    if (typeof t === 'string') {
+        return tagAttrs({ tag: t })
+    }
+    return tagAttrs(t)
+}
 
-let list = [];
+const tableRowTag = tag('tr')
+const tableRow = items => compose(tableRowTag, tableCells)(items)
+
+const tableCell = tag('td')
+const tableCells = items => items.map(tableCell).join('')
+
+let description = $('#description')
+let calories = $('#calories')
+let carbs = $('#carbs')
+let protein = $('#protein')
+
+let list = []
 
 description.keypress(() => {
-    description.removeClass('is-invalid');
-});
-
-carbs.keypress(() => {
-    description.removeClass('is-invalid');
-});
+    description.removeClass('is-invalid')
+})
 
 calories.keypress(() => {
-    description.removeClass('is-invalid');
-});
+    calories.removeClass('is-invalid')
+})
 
-proteins.keypress(() => {
-    description.removeClass('is-invalid');
-});
+carbs.keypress(() => {
+    carbs.removeClass('is-invalid')
+})
+
+protein.keypress(() => {
+    protein.removeClass('is-invalid')
+})
 
 const validateInputs = () => {
-    // description.val() -> Obtener valor en Jquery
-    //if (description.val() === '') {
-    //    description.addClass('is-invalid');
-    //}
-    description.val() ? '' : description.addClass('is-invalid');
-    carbs.val() ? '' : carbs.addClass('is-invalid');
-    calories.val() ? '' : calories.addClass('is-invalid');
-    proteins.val() ? '' : proteins.addClass('is-invalid');
 
-    if (description.val() && calories.val() && carbs.val() && calories.val() && proteins.val()) {
-        add();
-    }
-};
+    description.val() ? '' : description.addClass('is-invalid')
+    calories.val() ? '' : calories.addClass('is-invalid')
+    carbs.val() ? '' : carbs.addClass('is-invalid')
+    protein.val() ? '' : protein.addClass('is-invalid')
+
+    if (
+        description.val() &&
+        calories.val() &&
+        carbs.val() &&
+        protein.val()
+    ) add()
+}
 
 const add = () => {
     const newItem = {
         description: description.val(),
-        // si pones + delante te hace cast a 
-        // entero :
-        // calories: +calories.val(),
         calories: parseInt(calories.val()),
         carbs: parseInt(carbs.val()),
-        proteins: parseInt(proteins.val())
-    };
+        protein: parseInt(protein.val())
+    }
 
-    list.push(newItem);
-    console.log(list);
-    cleanInputs();
-};
+    list.push(newItem)
+    updateTotals()
+    cleanInputs()
+    renderItems()
+}
+
+const updateTotals = () => {
+    let calories = 0,
+        carbs = 0,
+        protein = 0
+
+    list.map(item => {
+        calories += item.calories,
+            carbs += item.carbs,
+            protein += item.protein
+    })
+
+    $('#totalCalories').text(calories)
+    $('#totalCarbs').text(carbs)
+    $('#totalProtein').text(protein)
+}
 
 const cleanInputs = () => {
-    description.val('');
-    calories.val('');
-    carbs.val('');
-    proteins.val('');
-};
+    description.val('')
+    calories.val('')
+    carbs.val('')
+    protein.val('')
+}
+
+const renderItems = () => {
+    $('tbody').empty()
+
+    list.map(item => {
+        $('tbody').append(tableRow([item.description, item.calories, item.carbs, item.protein]))
+    })
+}
